@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/CarSys_S.iml" filepath="$PROJECT_DIR$/CarSys_S.iml" />
+      <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/carLib/carLib.iml" filepath="$PROJECT_DIR$/carLib/carLib.iml" />
+      <module fileurl="file://$PROJECT_DIR$/clancher/clancher.iml" filepath="$PROJECT_DIR$/clancher/clancher.iml" />
+      <module fileurl="file://$PROJECT_DIR$/radio/radio.iml" filepath="$PROJECT_DIR$/radio/radio.iml" />
+    </modules>
+  </component>
+</project>
