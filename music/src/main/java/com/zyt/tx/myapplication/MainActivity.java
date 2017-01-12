@@ -7,7 +7,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -41,6 +40,9 @@ public class MainActivity extends AppCompatActivity {
     ImageButton btnPlay;
     @BindView(R.id.bntPause)
     ImageButton btnPause;
+    @BindView(R.id.modelImageView)
+    ModelImageView modelImageView;
+
     private MusicService musicPlayer;
 
     private Handler mHandler = new Handler() {
@@ -86,6 +88,14 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onProgressChanged(MyProgressBar bar, int progress) {
                 musicPlayer.setCurrentProgress(progress);
+            }
+        });
+
+        modelImageView.setCurrentMode(PlayCollections.MODE_SINGLE);
+        modelImageView.onSetModeSelectedListener(new ModelImageView.onModeSelectedListener() {
+            @Override
+            public void onSelected(int mode) {
+                PlayCollections.getInstance().setPlayMode(mode);
             }
         });
     }

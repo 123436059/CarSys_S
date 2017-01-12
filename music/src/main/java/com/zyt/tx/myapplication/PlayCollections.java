@@ -13,8 +13,8 @@ public class PlayCollections {
 
     public static final int MODE_SINGLE = 0x01;
     public static final int MODE_CIRCLE = 0x02;
-    public static final int MODE_RANDOM = 0x03;
     public static final int MODE_NORMAL = 0x04;
+    public static final int MODE_RANDOM = 0x03;
 
 
     private int playMode = MODE_RANDOM;
