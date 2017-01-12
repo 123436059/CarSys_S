@@ -2,13 +2,10 @@ package com.zyt.tx.myapplication;
 
 import android.app.Service;
 import android.content.Intent;
-import android.media.MediaCrypto;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
-import android.provider.Telephony;
-import android.util.Log;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,11 +15,7 @@ import java.util.List;
 public class MusicService extends Service implements MusicPlayControl {
 
     private MediaPlayer mediaPlayer;
-    private LocalBinder mBinder = new LocalBinder();
-
-    private List<MusicItemInfo> mMusicList;
-
-    private MusicItemInfo mCurrent;
+    private PlayCollections playControl;
 
     public MusicService() {
 
@@ -36,7 +29,8 @@ public class MusicService extends Service implements MusicPlayControl {
 
     private void initData() {
         //应该开启线程来执行耗时操作。
-        mMusicList = new ArrayList<>();
+        playControl = PlayCollections.getInstance();
+        List<MusicItemInfo> mMusicList = playControl.getMusicList();
         String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
         String musicPath = rootPath + "/netease/cloudmusic/Music";
         File file = new File(musicPath);
@@ -49,8 +43,7 @@ public class MusicService extends Service implements MusicPlayControl {
                     mMusicList.add(info);
                 }
             }
-            mCurrent = mMusicList.get(0);
-            Log.d("taxi", "music list size=" + mMusicList.size());
+            playControl.setCurrent(mMusicList.get(0));
         }
     }
 
@@ -64,9 +57,8 @@ public class MusicService extends Service implements MusicPlayControl {
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mBinder;
+        return new LocalBinder();
     }
-
 
     //---------music control-----------------
     @Override
@@ -74,9 +66,8 @@ public class MusicService extends Service implements MusicPlayControl {
         try {
             mediaPlayer = new MediaPlayer();
             mediaPlayer.reset();
-            mediaPlayer.setDataSource(mCurrent.getPath());
+            mediaPlayer.setDataSource(playControl.getCurrent().getPath());
             mediaPlayer.prepare();
-
             mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
                 @Override
                 public void onPrepared(MediaPlayer mp) {
@@ -87,55 +78,34 @@ public class MusicService extends Service implements MusicPlayControl {
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
-//                    mp.start();
-                    //TODO play next
+                    onNext();
                 }
             });
-
-            mediaPlayer.setLooping(true);
         } catch (IOException e) {
             e.printStackTrace();
             onError();
         }
-        return mCurrent;
+        return playControl.getCurrent();
     }
 
     @Override
     public void onPrev() {
-        int index = mMusicList.indexOf(mCurrent);
-        if (index >= 0) {
-            // circle mode : order circle random single
-            index = --index < 0 ? 0 : index;
-            Log.d("taxi", "cur index =" + index);
-            mCurrent = mMusicList.get(index);
-            onStop();
-            onPlay();
-        }
+        playControl.prev();
+        onStop();
+        onPlay();
     }
 
     @Override
     public void onNext() {
-        int index = mMusicList.indexOf(mCurrent);
-        if (index >= 0) {
-            //TODO circle mode
-            index = ++index > mMusicList.size() - 1 ? mMusicList.size() - 1 : index;
-            mCurrent = mMusicList.get(index);
-            onStop();
-            onPlay();
-        }
+        playControl.next();
+        onStop();
+        onPlay();
     }
 
     @Override
     public void onPause() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
-            mediaPlayer.start();
         }
     }
 
@@ -149,6 +119,13 @@ public class MusicService extends Service implements MusicPlayControl {
     }
 
     @Override
+    public void onResume() {
+        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+            mediaPlayer.start();
+        }
+    }
+
+    @Override
     public void onError() {
         onStop();
     }
@@ -158,6 +135,12 @@ public class MusicService extends Service implements MusicPlayControl {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             return true;
         }
+        return false;
+    }
+
+    @Override
+    public boolean isPausing() {
+        //增加一个标志位
         return false;
     }
 
@@ -186,7 +169,7 @@ public class MusicService extends Service implements MusicPlayControl {
 
     @Override
     public MusicItemInfo getCurrentMusicInfo() {
-        return mCurrent;
+        return playControl.getCurrent();
     }
 
     class LocalBinder extends Binder {

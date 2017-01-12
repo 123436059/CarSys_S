@@ -42,8 +42,6 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.bntPause)
     ImageButton btnPause;
     private MusicService musicPlayer;
-    private String rootPath = Environment.getExternalStorageDirectory().getAbsolutePath();
-    private String music_path = rootPath + "/netease/cloudmusic/Music/周杰伦 - 告白气球.mp3";
 
     private Handler mHandler = new Handler() {
         @Override
@@ -87,7 +85,6 @@ public class MainActivity extends AppCompatActivity {
         myProgressBar.setOnProgressChangedListener(new MyProgressBar.OnProgressChangeListener() {
             @Override
             public void onProgressChanged(MyProgressBar bar, int progress) {
-                //更新实时的播放进度
                 musicPlayer.setCurrentProgress(progress);
             }
         });
@@ -136,7 +133,8 @@ public class MainActivity extends AppCompatActivity {
             case R.id.cover:
                 break;
             case R.id.btnPlay:
-                play();
+//                play();
+                resume();
                 break;
             case R.id.bntPause:
                 if (musicPlayer == null) {
@@ -162,6 +160,18 @@ public class MainActivity extends AppCompatActivity {
                 updateViewInfo();
                 break;
         }
+    }
+
+    private void resume() {
+        if (musicPlayer == null) {
+            return;
+        }
+        if (!musicPlayer.isPlaying()) {
+            musicPlayer.onResume();
+        }
+        updateViewInfo();
+        btnPlay.setVisibility(View.INVISIBLE);
+        btnPause.setVisibility(View.VISIBLE);
     }
 
     private void play() {

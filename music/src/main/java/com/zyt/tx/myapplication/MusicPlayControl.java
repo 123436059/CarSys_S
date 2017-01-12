@@ -25,6 +25,8 @@ public interface MusicPlayControl {
 
     boolean isPlaying();
 
+    boolean isPausing();
+
     int getCurrentPosition();
 
     int getDuration();
