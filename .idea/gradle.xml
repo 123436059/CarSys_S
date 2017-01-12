@@ -9,9 +9,11 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/apiDemos" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/carLib" />
             <option value="$PROJECT_DIR$/clancher" />
+            <option value="$PROJECT_DIR$/music" />
             <option value="$PROJECT_DIR$/radio" />
           </set>
         </option>

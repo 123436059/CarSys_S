@@ -1,1 +1,2 @@
-include ':app', ':radio', ':carLib', ':clancher'
+include ':app', ':radio', ':carLib', ':clancher', ':music'
+include ':apiDemos'
