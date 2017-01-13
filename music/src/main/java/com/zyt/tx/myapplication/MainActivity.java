@@ -12,9 +12,11 @@ import android.os.IBinder;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.PopupWindow;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -45,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
 
     private MusicService musicPlayer;
 
+
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -73,6 +76,7 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private PlayListPopWindow popList;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +90,11 @@ public class MainActivity extends AppCompatActivity {
 
         myProgressBar.setOnProgressChangedListener(new MyProgressBar.OnProgressChangeListener() {
             @Override
-            public void onProgressChanged(MyProgressBar bar, int progress) {
-                musicPlayer.setCurrentProgress(progress);
+            public void onProgressChanged(MyProgressBar bar, int progress, boolean fromUser) {
+                //这里加一个是否是用户操作，不然当seekbar更新时，都会调用seekto操作，造成卡顿。
+                if (fromUser) {
+                    musicPlayer.setCurrentProgress(progress);
+                }
             }
         });
 
@@ -96,6 +103,27 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onSelected(int mode) {
                 PlayCollections.getInstance().setPlayMode(mode);
+            }
+        });
+        initPop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (popList != null) {
+            popList.dismiss();
+        }
+        unbindService(mConn);
+    }
+
+    private void initPop() {
+        popList = new PlayListPopWindow(this);
+        popList.setOnListItemClickListener(new PlayListPopWindow.onListItemClickListener() {
+            @Override
+            public void onListItemClick(int position) {
+                PlayCollections.getInstance().setCurrentIndex(position);
+                play();
             }
         });
     }
@@ -123,7 +151,6 @@ public class MainActivity extends AppCompatActivity {
         Toast.makeText(this, "request permission fail", Toast.LENGTH_SHORT).show();
     }
 
-
     Runnable seekBarRunnable = new Runnable() {
         @Override
         public void run() {
@@ -135,7 +162,8 @@ public class MainActivity extends AppCompatActivity {
     };
 
 
-    @OnClick({R.id.btnList, R.id.cover, R.id.btnPlay, R.id.bntPause, R.id.btnPrev, R.id.btnNext})
+    @OnClick({R.id.btnList, R.id.cover, R.id.btnPlay, R.id.bntPause, R.id.btnPrev, R.id.btnNext
+            , R.id.btnPlayList})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnList:
@@ -169,6 +197,17 @@ public class MainActivity extends AppCompatActivity {
                 musicPlayer.onNext();
                 updateViewInfo();
                 break;
+
+            case R.id.btnPlayList:
+                showListPop();
+                break;
+        }
+    }
+
+    private void showListPop() {
+        if (!isFinishing() && !popList.isShowing()) {
+            popList.setCurrentIndex(PlayCollections.getInstance().getCurrentIndex());
+            popList.show(findViewById(R.id.rl_control));
         }
     }
 
@@ -205,5 +244,14 @@ public class MainActivity extends AppCompatActivity {
         //要移除，否则会重复加入到队列中。
         mHandler.removeCallbacks(seekBarRunnable);
         mHandler.post(seekBarRunnable);
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (popList != null && popList.isShowing()) {
+            popList.hide();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

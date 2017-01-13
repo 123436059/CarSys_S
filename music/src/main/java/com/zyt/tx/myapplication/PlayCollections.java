@@ -17,7 +17,7 @@ public class PlayCollections {
     public static final int MODE_RANDOM = 0x03;
 
 
-    private int playMode = MODE_RANDOM;
+    private int playMode = MODE_SINGLE;
 
     private Random random = new Random();
 
@@ -55,6 +55,18 @@ public class PlayCollections {
     public void setCurrent(MusicItemInfo mCurrent) {
         this.mCurrent = mCurrent;
     }
+
+    public void setCurrentIndex(int position) {
+        if (position < 0 || position >= mMusicList.size()) {
+            return;
+        }
+        setCurrent(mMusicList.get(position));
+    }
+
+    public int getCurrentIndex() {
+        return mMusicList.indexOf(mCurrent);
+    }
+
 
     public int getPlayMode() {
         return playMode;

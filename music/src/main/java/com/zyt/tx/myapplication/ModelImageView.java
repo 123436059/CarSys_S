@@ -18,11 +18,11 @@ public class ModelImageView extends ImageView implements View.OnClickListener {
     private int[] bgIds = {R.drawable.play_single, R.drawable.play_all, R.drawable.play_random};
 
     public ModelImageView(Context context) {
-        super(context);
+        this(context, null);
     }
 
     public ModelImageView(Context context, AttributeSet attrs) {
-        super(context, attrs);
+        this(context, attrs, 0);
     }
 
     public ModelImageView(Context context, AttributeSet attrs, int defStyleAttr) {
@@ -30,15 +30,13 @@ public class ModelImageView extends ImageView implements View.OnClickListener {
         this.setOnClickListener(this);
     }
 
-
     @Override
     public void onClick(View view) {
-        currentIndex = ++currentIndex > bgIds.length ? 0 : currentIndex;
+        currentIndex = ++currentIndex > bgIds.length-1 ? 0 : currentIndex;
         setImageResource(bgIds[currentIndex]);
         if (mListener != null) {
             mListener.onSelected(mods[currentIndex]);
         }
-
     }
 
     public void setCurrentMode(int mode) {

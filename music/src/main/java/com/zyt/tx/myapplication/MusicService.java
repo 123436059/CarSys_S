@@ -24,7 +24,18 @@ public class MusicService extends Service implements MusicPlayControl {
     @Override
     public void onCreate() {
         super.onCreate();
-        initData();
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initData();
+            }
+        }).start();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        onStop();
     }
 
     private void initData() {
@@ -36,14 +47,16 @@ public class MusicService extends Service implements MusicPlayControl {
         File file = new File(musicPath);
         if (file.exists() && file.isDirectory()) {
             File[] files = file.listFiles();
-            for (File item : files) {
-                if (item.getName().endsWith(".mp3")) {
-                    MusicItemInfo info = new MusicItemInfo();
-                    setInfoDetail(info, item);
-                    mMusicList.add(info);
+            if (files != null && files.length > 0) {
+                for (File item : files) {
+                    if (item.getName().endsWith(".mp3")) {
+                        MusicItemInfo info = new MusicItemInfo();
+                        setInfoDetail(info, item);
+                        mMusicList.add(info);
+                    }
                 }
+                playControl.setCurrent(mMusicList.get(0));
             }
-            playControl.setCurrent(mMusicList.get(0));
         }
     }
 
@@ -64,7 +77,10 @@ public class MusicService extends Service implements MusicPlayControl {
     @Override
     public MusicItemInfo onPlay() {
         try {
-            mediaPlayer = new MediaPlayer();
+            onStop();
+            if (mediaPlayer == null) {
+                mediaPlayer = new MediaPlayer();
+            }
             mediaPlayer.reset();
             mediaPlayer.setDataSource(playControl.getCurrent().getPath());
             mediaPlayer.prepare();

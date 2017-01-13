@@ -60,7 +60,8 @@
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true">
+        android:layout_alignParentStart="true"
+        android:layout_marginBottom="10dp">
 
 
         <com.zyt.tx.myapplication.ModelImageView
@@ -112,5 +113,14 @@
             android:layout_toRightOf="@+id/fl_play_pause"
             android:background="@null"
             android:src="@drawable/play_next" />
+
+        <ImageView
+            android:id="@+id/btnPlayList"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="30dp"
+            android:src="@drawable/play_all" />
     </RelativeLayout>
 </RelativeLayout>

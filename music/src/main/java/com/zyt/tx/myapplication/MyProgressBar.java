@@ -46,7 +46,7 @@ public class MyProgressBar extends LinearLayout implements SeekBar.OnSeekBarChan
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         setStartTv(progress);
         if (mListener != null) {
-            mListener.onProgressChanged(MyProgressBar.this, progress);
+            mListener.onProgressChanged(MyProgressBar.this, progress, fromUser);
         }
     }
 
@@ -92,7 +92,7 @@ public class MyProgressBar extends LinearLayout implements SeekBar.OnSeekBarChan
 
     //-----inter---------
     public interface OnProgressChangeListener {
-        void onProgressChanged(MyProgressBar bar, int progress);
+        void onProgressChanged(MyProgressBar bar, int progress, boolean isFromUser);
     }
 
     OnProgressChangeListener mListener;
