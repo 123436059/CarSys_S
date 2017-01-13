@@ -6,6 +6,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -46,7 +47,6 @@ public class MainActivity extends AppCompatActivity {
     ModelImageView modelImageView;
 
     private MusicService musicPlayer;
-
 
     private Handler mHandler = new Handler() {
         @Override
@@ -98,7 +98,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        modelImageView.setCurrentMode(PlayCollections.MODE_SINGLE);
+        modelImageView.setCurrentMode(PlayCollections.getInstance().getPlayMode());
         modelImageView.onSetModeSelectedListener(new ModelImageView.onModeSelectedListener() {
             @Override
             public void onSelected(int mode) {
