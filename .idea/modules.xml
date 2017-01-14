@@ -9,6 +9,7 @@
       <module fileurl="file://$PROJECT_DIR$/clancher/clancher.iml" filepath="$PROJECT_DIR$/clancher/clancher.iml" />
       <module fileurl="file://$PROJECT_DIR$/music/music.iml" filepath="$PROJECT_DIR$/music/music.iml" />
       <module fileurl="file://$PROJECT_DIR$/radio/radio.iml" filepath="$PROJECT_DIR$/radio/radio.iml" />
+      <module fileurl="file://$PROJECT_DIR$/videoRecorder/videoRecorder.iml" filepath="$PROJECT_DIR$/videoRecorder/videoRecorder.iml" />
     </modules>
   </component>
 </project>

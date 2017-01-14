@@ -15,6 +15,7 @@
             <option value="$PROJECT_DIR$/clancher" />
             <option value="$PROJECT_DIR$/music" />
             <option value="$PROJECT_DIR$/radio" />
+            <option value="$PROJECT_DIR$/videoRecorder" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

@@ -2,6 +2,7 @@ package com.zyt.tx.myapplication;
 
 import android.content.Context;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -38,8 +39,11 @@ public class PlayListPopWindow extends PopupWindow {
         setWidth(ViewGroup.LayoutParams.MATCH_PARENT);
         setHeight(DensityUtils.dip2px(context, 400));
         setOutsideTouchable(true);
-        setBackgroundDrawable(new BitmapDrawable());
-
+//        setBackgroundDrawable(new BitmapDrawable());
+        ColorDrawable dw = new ColorDrawable(0xb0000000);
+        //设置SelectPicPopupWindow弹出窗体的背景
+        this.setBackgroundDrawable(dw);
+        setAnimationStyle(R.style.pop_anim_style);
         RecyclerView mRecyclerView = (RecyclerView) contentView.findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());

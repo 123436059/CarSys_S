@@ -251,7 +251,7 @@ public class MainActivity extends AppCompatActivity {
         if (popList != null && popList.isShowing()) {
             popList.hide();
         } else {
-            super.onBackPressed();
+            startActivity(new Intent(this, MusicActivity.class));
         }
     }
 }
