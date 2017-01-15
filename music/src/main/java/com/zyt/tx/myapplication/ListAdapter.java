@@ -7,7 +7,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import java.io.IOException;
 import java.util.List;
 
 /**
@@ -66,9 +65,14 @@ public class ListAdapter extends RecyclerView.Adapter<ListAdapter.ViewHolder> {
         this.index = index;
     }
 
+    public int getCurrent() {
+        return index;
+    }
+
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvIndex;
         TextView tvContent;
+
         public ViewHolder(final View itemView) {
             super(itemView);
             tvIndex = (TextView) itemView.findViewById(R.id.tvIndex);

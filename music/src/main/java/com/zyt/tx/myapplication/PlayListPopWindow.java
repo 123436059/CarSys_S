@@ -1,7 +1,6 @@
 package com.zyt.tx.myapplication;
 
 import android.content.Context;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
@@ -12,8 +11,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.PopupWindow;
 
-import java.io.IOException;
-
 /**
  * Created by MJS on 2017/1/13.
  */
@@ -21,6 +18,7 @@ import java.io.IOException;
 public class PlayListPopWindow extends PopupWindow {
 
     private final ListAdapter mAdapter;
+    private final RecyclerView mRecyclerView;
 
     public interface onListItemClickListener {
         void onListItemClick(int position);
@@ -44,7 +42,7 @@ public class PlayListPopWindow extends PopupWindow {
         //设置SelectPicPopupWindow弹出窗体的背景
         this.setBackgroundDrawable(dw);
         setAnimationStyle(R.style.pop_anim_style);
-        RecyclerView mRecyclerView = (RecyclerView) contentView.findViewById(R.id.recyclerView);
+        mRecyclerView = (RecyclerView) contentView.findViewById(R.id.recyclerView);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(context));
         mRecyclerView.setItemAnimator(new DefaultItemAnimator());
         mAdapter = new ListAdapter(PlayCollections.getInstance().getMusicList());
@@ -67,6 +65,7 @@ public class PlayListPopWindow extends PopupWindow {
 
     public void show(View view) {
         showAtLocation(view, Gravity.BOTTOM, 0, 0);
+        mRecyclerView.smoothScrollToPosition(mAdapter.getCurrent());
         mAdapter.notifyDataSetChanged();
     }
 

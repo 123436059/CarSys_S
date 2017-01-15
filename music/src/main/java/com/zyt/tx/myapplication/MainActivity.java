@@ -6,20 +6,16 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.PopupWindow;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,7 +24,7 @@ import kr.co.namee.permissiongen.PermissionFail;
 import kr.co.namee.permissiongen.PermissionGen;
 import kr.co.namee.permissiongen.PermissionSuccess;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements IMusicUpdateOperator {
 
     private static final int UPDATE_PROGRESS = 1;
     @BindView(R.id.tvTitle)
@@ -46,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
     @BindView(R.id.modelImageView)
     ModelImageView modelImageView;
 
-    private MusicService musicPlayer;
+    private MusicPlayControl musicPlayer;
 
     private Handler mHandler = new Handler() {
         @Override
@@ -67,7 +63,9 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicService.LocalBinder binder = (MusicService.LocalBinder) service;
             musicPlayer = binder.getService();
-            play();
+            musicPlayer.registerUpdateUIListener(MainActivity.this);
+            //更新当前界面,不做其他处理
+            updateViewInfo();
         }
 
         @Override
@@ -87,13 +85,14 @@ public class MainActivity extends AppCompatActivity {
         btnPlay.setVisibility(View.VISIBLE);
         btnPause.setVisibility(View.INVISIBLE);
         bindMusicService();
-
         myProgressBar.setOnProgressChangedListener(new MyProgressBar.OnProgressChangeListener() {
             @Override
             public void onProgressChanged(MyProgressBar bar, int progress, boolean fromUser) {
                 //这里加一个是否是用户操作，不然当seekbar更新时，都会调用seekto操作，造成卡顿。
                 if (fromUser) {
-                    musicPlayer.setCurrentProgress(progress);
+                    if (musicPlayer != null) {
+                        musicPlayer.setCurrentProgress(progress);
+                    }
                 }
             }
         });
@@ -106,6 +105,24 @@ public class MainActivity extends AppCompatActivity {
             }
         });
         initPop();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (musicPlayer != null) {
+            musicPlayer.registerUpdateUIListener(this);
+        }
+        myProgressBar.updateProgress(PlayCollections.getInstance().getProgress()
+                , PlayCollections.getInstance().getMax());
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (musicPlayer != null) {
+            musicPlayer.unregisterUpdateUIListener(this);
+        }
     }
 
     @Override
@@ -143,27 +160,15 @@ public class MainActivity extends AppCompatActivity {
 
     @PermissionSuccess(requestCode = 100)
     public void onRequestSuc() {
-        Toast.makeText(this, "request permission success", Toast.LENGTH_SHORT).show();
     }
 
     @PermissionFail(requestCode = 100)
     public void onRequestFail() {
-        Toast.makeText(this, "request permission fail", Toast.LENGTH_SHORT).show();
     }
-
-    Runnable seekBarRunnable = new Runnable() {
-        @Override
-        public void run() {
-            int progress = musicPlayer.getCurrentPosition();
-            int duration = musicPlayer.getDuration();
-            mHandler.obtainMessage(UPDATE_PROGRESS, progress, duration).sendToTarget();
-            mHandler.postDelayed(this, 1000);
-        }
-    };
 
 
     @OnClick({R.id.btnList, R.id.cover, R.id.btnPlay, R.id.bntPause, R.id.btnPrev, R.id.btnNext
-            , R.id.btnPlayList})
+            , R.id.btnPlayList, R.id.ivExit})
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.btnList:
@@ -171,7 +176,6 @@ public class MainActivity extends AppCompatActivity {
             case R.id.cover:
                 break;
             case R.id.btnPlay:
-//                play();
                 resume();
                 break;
             case R.id.bntPause:
@@ -179,27 +183,27 @@ public class MainActivity extends AppCompatActivity {
                     return;
                 }
                 musicPlayer.onPause();
-                mHandler.removeCallbacks(seekBarRunnable);
-                btnPlay.setVisibility(View.VISIBLE);
-                btnPause.setVisibility(View.INVISIBLE);
                 break;
             case R.id.btnPrev:
                 if (musicPlayer == null) {
                     return;
                 }
                 musicPlayer.onPrev();
-                updateViewInfo();
                 break;
             case R.id.btnNext:
                 if (musicPlayer == null) {
                     return;
                 }
                 musicPlayer.onNext();
-                updateViewInfo();
                 break;
 
             case R.id.btnPlayList:
                 showListPop();
+                break;
+
+            case R.id.ivExit:
+                setResult(100);
+                finish();
                 break;
         }
     }
@@ -241,9 +245,6 @@ public class MainActivity extends AppCompatActivity {
         if (info != null) {
             tvTitle.setText(info.getName());
         }
-        //要移除，否则会重复加入到队列中。
-        mHandler.removeCallbacks(seekBarRunnable);
-        mHandler.post(seekBarRunnable);
     }
 
     @Override
@@ -251,7 +252,32 @@ public class MainActivity extends AppCompatActivity {
         if (popList != null && popList.isShowing()) {
             popList.hide();
         } else {
-            startActivity(new Intent(this, MusicActivity.class));
+            super.onBackPressed();
         }
+    }
+
+    @Override
+    public void musicPlay() {
+        updateViewInfo();
+        btnPlay.setVisibility(View.INVISIBLE);
+        btnPause.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void musicPause() {
+        updateViewInfo();
+        btnPlay.setVisibility(View.VISIBLE);
+        btnPause.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void musicStop() {
+        btnPlay.setVisibility(View.VISIBLE);
+        btnPause.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void musicProgress(int progress, int max) {
+        myProgressBar.updateProgress(progress, max);
     }
 }

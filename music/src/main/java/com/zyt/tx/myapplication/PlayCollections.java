@@ -1,6 +1,5 @@
 package com.zyt.tx.myapplication;
 
-import java.net.BindException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -119,5 +118,27 @@ public class PlayCollections {
                 break;
         }
         return index;
+    }
+
+    private int progress;
+
+    private int max;
+
+    public void setProgress(int progress) {
+        this.progress = progress;
+    }
+
+
+    public void setMax(int max) {
+        this.max = max;
+    }
+
+
+    public int getProgress() {
+        return progress;
+    }
+
+    public int getMax() {
+        return max;
     }
 }

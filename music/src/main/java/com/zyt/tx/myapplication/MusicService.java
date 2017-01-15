@@ -5,17 +5,47 @@ import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
+import android.os.Message;
+
+import com.example.utillib.Log.L;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class MusicService extends Service implements MusicPlayControl {
 
     private MediaPlayer mediaPlayer;
     private PlayCollections playControl;
+
+    private boolean isPausing = false;
+
+    private CopyOnWriteArrayList<IMusicUpdateOperator> mUpdates = new CopyOnWriteArrayList<>();
+    Handler mHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+        }
+    };
+
+    Runnable updateRunnable = new Runnable() {
+        @Override
+        public void run() {
+            for (IMusicUpdateOperator mUpdate : mUpdates) {
+                mUpdate.musicProgress(getCurrentPosition(), getDuration());
+                PlayCollections.getInstance().setProgress(getCurrentPosition());
+                PlayCollections.getInstance().setMax(getDuration());
+                L.d("推送音乐");
+            }
+            if (isPlaying()) {
+                mHandler.postDelayed(this, 1000);
+            }
+        }
+    };
 
     public MusicService() {
 
@@ -24,6 +54,8 @@ public class MusicService extends Service implements MusicPlayControl {
     @Override
     public void onCreate() {
         super.onCreate();
+        L.isNeedLog = true;
+        L.d("onCreate");
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -33,8 +65,15 @@ public class MusicService extends Service implements MusicPlayControl {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        L.d("onStartCommand");
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
+        L.d("onDestroy");
         onStop();
     }
 
@@ -70,7 +109,14 @@ public class MusicService extends Service implements MusicPlayControl {
 
     @Override
     public IBinder onBind(Intent intent) {
+        L.d("onBind");
         return new LocalBinder();
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        L.d("onUnbind");
+        return super.onUnbind(intent);
     }
 
     //---------music control-----------------
@@ -90,13 +136,15 @@ public class MusicService extends Service implements MusicPlayControl {
                     mp.start();
                 }
             });
-
+            updateUIOperator(UPDATE_PLAY);
             mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
                 @Override
                 public void onCompletion(MediaPlayer mp) {
                     onNext();
                 }
             });
+            mHandler.removeCallbacks(updateRunnable);
+            mHandler.post(updateRunnable);
         } catch (IOException e) {
             e.printStackTrace();
             onError();
@@ -104,17 +152,37 @@ public class MusicService extends Service implements MusicPlayControl {
         return playControl.getCurrent();
     }
 
+    private static final int UPDATE_PLAY = 0;
+    private static final int UPDATE_STOP = 1;
+    private static final int UPDATE_PAUSE = 2;
+
+    private void updateUIOperator(int i) {
+        for (IMusicUpdateOperator mUpdate : mUpdates) {
+            switch (i) {
+                case UPDATE_PLAY:
+                    mUpdate.musicPlay();
+                    break;
+
+                case UPDATE_PAUSE:
+                    mUpdate.musicPause();
+                    break;
+
+                case UPDATE_STOP:
+                    mUpdate.musicStop();
+                    break;
+            }
+        }
+    }
+
     @Override
     public void onPrev() {
         playControl.prev();
-        onStop();
         onPlay();
     }
 
     @Override
     public void onNext() {
         playControl.next();
-        onStop();
         onPlay();
     }
 
@@ -122,6 +190,9 @@ public class MusicService extends Service implements MusicPlayControl {
     public void onPause() {
         if (mediaPlayer != null && mediaPlayer.isPlaying()) {
             mediaPlayer.pause();
+            isPausing = true;
+            mHandler.removeCallbacks(updateRunnable);
+            updateUIOperator(UPDATE_PAUSE);
         }
     }
 
@@ -132,12 +203,19 @@ public class MusicService extends Service implements MusicPlayControl {
             mediaPlayer.release();
             mediaPlayer = null;
         }
+        updateUIOperator(UPDATE_STOP);
+        mHandler.removeCallbacks(updateRunnable);
+        isPausing = false;
     }
 
     @Override
     public void onResume() {
-        if (mediaPlayer != null && !mediaPlayer.isPlaying()) {
+        if (mediaPlayer != null && !mediaPlayer.isPlaying() && isPausing) {
             mediaPlayer.start();
+            isPausing = false;
+            updateUIOperator(UPDATE_PLAY);
+            mHandler.removeCallbacks(updateRunnable);
+            mHandler.post(updateRunnable);
         }
     }
 
@@ -157,7 +235,7 @@ public class MusicService extends Service implements MusicPlayControl {
     @Override
     public boolean isPausing() {
         //增加一个标志位
-        return false;
+        return isPausing;
     }
 
     @Override
@@ -186,6 +264,20 @@ public class MusicService extends Service implements MusicPlayControl {
     @Override
     public MusicItemInfo getCurrentMusicInfo() {
         return playControl.getCurrent();
+    }
+
+    @Override
+    public void registerUpdateUIListener(IMusicUpdateOperator listener) {
+        if (!mUpdates.contains(listener))
+            mUpdates.add(listener);
+    }
+
+    @Override
+    public void unregisterUpdateUIListener(IMusicUpdateOperator listener) {
+        int i = mUpdates.indexOf(listener);
+        if (i >= 0) {
+            mUpdates.remove(i);
+        }
     }
 
     class LocalBinder extends Binder {

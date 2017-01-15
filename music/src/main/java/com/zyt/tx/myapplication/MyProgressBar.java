@@ -76,7 +76,6 @@ public class MyProgressBar extends LinearLayout implements SeekBar.OnSeekBarChan
         tvEnd.setText(current);
     }
 
-
     //设置max初始值=0.
     public void updateProgress(int progress, int duration) {
         if (seekBar == null || seekBar.getProgress() == progress) {
