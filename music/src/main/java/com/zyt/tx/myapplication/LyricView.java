@@ -1,11 +1,15 @@
 package com.zyt.tx.myapplication;
 
+import android.animation.Animator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.MotionEvent;
@@ -28,6 +32,8 @@ import java.util.ArrayList;
 
 public class LyricView extends View {
 
+    private static final int MSG_PLAYER_HIDE = 0x158;
+    private static final int MSG_PLAYER_SLIDE = 0x157;
     private int maximumFlingVelocity;
     private Paint mTextPaint;
 
@@ -82,6 +88,13 @@ public class LyricView extends View {
      */
     private float mScrollY = 0;
     private VelocityTracker mVelocityTracker;
+
+    /**
+     * 判断当前用户是否触摸
+     */
+    private boolean mUserTouch = false;
+
+    private boolean mSliding = false;
 
     public LyricView(Context context) {
         this(context, null);
@@ -204,7 +217,6 @@ public class LyricView extends View {
                 break;
 
 
-
         }
 
         return super.onTouchEvent(event);
@@ -213,6 +225,81 @@ public class LyricView extends View {
     private void actionDown(MotionEvent event) {
 
 
+    }
+
+
+    Handler postman = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            switch (msg.what) {
+                case MSG_PLAYER_HIDE:
+                    sendEmptyMessageDelayed(MSG_PLAYER_SLIDE, 1200);
+                    mIndicatorShow = false;
+                    invalidateView();
+                    break;
+
+                case MSG_PLAYER_SLIDE:
+                    smoothScrollTo(measureCurrentScrollY(mCurrentPlayLine));
+                    break;
+
+            }
+        }
+    };
+
+    /**
+     * 从当前位置滑动到指定位置
+     *
+     * @param toY 指定纵坐标位置
+     */
+    private void smoothScrollTo(float toY) {
+        final ValueAnimator animator = ValueAnimator.ofFloat(mScrollY, toY);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                if (mUserTouch) {
+                    animator.cancel();
+                    return;
+                }
+                mScrollY = (float) animation.getAnimatedValue();
+                invalidateView();
+            }
+        });
+
+        animator.addListener(new Animator.AnimatorListener() {
+            @Override
+            public void onAnimationStart(Animator animation) {
+                mSliding = true;
+            }
+
+            @Override
+            public void onAnimationEnd(Animator animation) {
+                mSliding = false;
+                //TODO measureCurrentLine()
+                invalidateView();
+            }
+
+            @Override
+            public void onAnimationCancel(Animator animation) {
+
+            }
+
+            @Override
+            public void onAnimationRepeat(Animator animation) {
+
+            }
+        });
+
+    }
+
+    /**
+     * 输入当前显示行号来测量当前scroll的y坐标
+     *
+     * @param line 当前指定行号
+     * @return
+     */
+    private float measureCurrentScrollY(int line) {
+        return (line - 1) * mLineHeight;
     }
 
     /**
