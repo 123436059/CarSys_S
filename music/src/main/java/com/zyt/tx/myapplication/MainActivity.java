@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -16,6 +17,12 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.w3c.dom.Text;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -41,6 +48,8 @@ public class MainActivity extends AppCompatActivity implements IMusicUpdateOpera
     ImageButton btnPause;
     @BindView(R.id.modelImageView)
     ModelImageView modelImageView;
+    @BindView(R.id.tvLyric)
+    TextView tvLyric;
 
     private MusicPlayControl musicPlayer;
 
@@ -105,6 +114,29 @@ public class MainActivity extends AppCompatActivity implements IMusicUpdateOpera
             }
         });
         initPop();
+
+        testLyric();
+    }
+
+    private void testLyric() {
+        try {
+            File dir = new File(Environment.getExternalStorageDirectory(), "ZztaxiDatas");
+            File file = new File(dir, "告白气球.lrc");
+            LyricInfo lyricInfo = LyricUtils.setupLyricResource(new FileInputStream(file), "utf-8");
+            if (lyricInfo != null && lyricInfo.songLines != null) {
+                StringBuilder sb = new StringBuilder();
+
+                for (int i = 0; i < lyricInfo.songLines.size(); i++) {
+                    sb.append(lyricInfo.songLines.get(i).content + "\n");
+                }
+                tvLyric.setText(sb.toString());
+            }
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     @Override
